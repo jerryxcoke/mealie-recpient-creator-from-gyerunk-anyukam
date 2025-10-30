@@ -20,6 +20,24 @@ A Python tool to automatically create recipes and weekly meal plans in [Mealie](
 
 ## Installation
 
+### Windows
+
+1. Clone or download this repository
+
+2. Install dependencies:
+```cmd
+pip install -r requirements.txt
+```
+
+3. Configure your Mealie connection:
+```cmd
+copy .env.example .env
+REM Edit .env with Notepad and add your Mealie URL and API token
+notepad .env
+```
+
+### Linux/Mac
+
 1. Clone or download this repository
 
 2. Install dependencies:
@@ -31,6 +49,7 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 # Edit .env and add your Mealie URL and API token
+nano .env
 ```
 
 ## Getting Your Mealie API Token
@@ -42,7 +61,55 @@ cp .env.example .env
 
 ## Usage
 
-### Using a JSON file:
+### Quick Start - Windows Helper Scripts
+
+**Option 1: PowerShell (Recommended)**
+```powershell
+# 1. Copy and configure .env file
+Copy-Item .env.example .env
+# Edit .env with your Mealie URL and API token
+
+# 2. Run the script
+.\run_windows.ps1 example_menu.json
+```
+
+**Option 2: Command Prompt/Batch**
+```cmd
+# 1. Copy and configure .env file
+copy .env.example .env
+REM Edit .env with your Mealie URL and API token
+
+# 2. Run the script
+run_windows.bat example_menu.json
+```
+
+These helper scripts automatically load settings from your `.env` file!
+
+### Manual Usage
+
+### On Windows (PowerShell):
+
+```powershell
+# Set environment variables
+$env:MEALIE_BASE_URL="http://your-mealie-instance:9000"
+$env:MEALIE_API_TOKEN="your_api_token_here"
+
+# Run the script
+python mealie_menu_creator.py example_menu.json
+```
+
+### On Windows (Command Prompt/CMD):
+
+```cmd
+# Set environment variables
+set MEALIE_BASE_URL=http://your-mealie-instance:9000
+set MEALIE_API_TOKEN=your_api_token_here
+
+# Run the script
+python mealie_menu_creator.py example_menu.json
+```
+
+### On Linux/Mac:
 
 ```bash
 export MEALIE_BASE_URL=http://your-mealie-instance:9000
@@ -51,21 +118,16 @@ export MEALIE_API_TOKEN=your_api_token_here
 python mealie_menu_creator.py example_menu.json
 ```
 
-### Using stdin:
+### Using a JSON file from stdin:
 
+**Windows PowerShell:**
+```powershell
+Get-Content your_menu.json | python mealie_menu_creator.py
+```
+
+**Linux/Mac:**
 ```bash
-export MEALIE_BASE_URL=http://your-mealie-instance:9000
-export MEALIE_API_TOKEN=your_api_token_here
-
 cat your_menu.json | python mealie_menu_creator.py
-```
-
-### Using environment variables from .env:
-
-```bash
-# If using python-dotenv or similar
-source .env
-python mealie_menu_creator.py example_menu.json
 ```
 
 ## JSON Format
