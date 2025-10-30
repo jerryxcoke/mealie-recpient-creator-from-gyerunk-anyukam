@@ -1,0 +1,39 @@
+{
+  "week": 26,
+  "monday": [
+    {
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      "name": "Ajváros, cheddar sajtos szendvics",
+      "description": "Reggeli: Ajváros, cheddar sajtos szendvics",
+      "image": [],
+      "recipeYield": "1 adag",
+      "recipeIngredient": [
+        "30 g ajvár",
+        "35 g cheddar sajt",
+        "55 g teljeskiőrlésű vagy Graham-, rozskenyér/ zsemle/ kifli",
+        "50-100 g friss zöldség (retek, paradicsom, uborka, paprika, salátalevelek, savanyúság stb.)"
+      ],
+      "recipeInstructions": [
+        {
+          "@type": "HowToStep",
+          "text": "Az elkészítési leírás nem található."
+        }
+      ],
+      "nutrition": {
+        "@type": "NutritionInformation",
+        "calories": "305 kcal",
+        "proteinContent": "13 g",
+        "fatContent": "13 g",
+        "carbohydrateContent": "32 g"
+      },
+      "keywords": "reggeli"
+    }
+  ],
+  "tuesday": [],
+  "wednesday": [],
+  "thursday": [],
+  "friday": [],
+  "saturday": [],
+  "sunday": []
+}
