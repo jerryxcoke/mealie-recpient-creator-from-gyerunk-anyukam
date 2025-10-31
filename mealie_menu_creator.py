@@ -52,7 +52,22 @@ class MealieAPI:
         """Get all ingredients"""
         try:
             response = self._request('GET', '/foods')
-            return response.json()
+            data = response.json()
+
+            if isinstance(data, list):
+                return data
+
+            if isinstance(data, dict):
+                items = data.get('items')
+
+                if isinstance(items, list):
+                    return items
+
+                # Fallback: the payload might already be a mapping of id -> ingredient
+                return [value for value in data.values() if isinstance(value, dict)]
+
+            print(f"Unexpected ingredient payload type: {type(data)}")
+            return []
         except requests.exceptions.HTTPError as e:
             print(f"Error fetching ingredients: {e}")
             return []
@@ -76,8 +91,15 @@ class MealieAPI:
         name_lower = name.lower().strip()
         
         for ingredient in ingredients:
-            if ingredient.get('name', '').lower().strip() == name_lower:
-                return ingredient
+            if isinstance(ingredient, dict):
+                ingredient_name = ingredient.get('name') or ingredient.get('title') or ''
+
+                if ingredient_name.lower().strip() == name_lower:
+                    return ingredient
+
+            elif isinstance(ingredient, str):
+                if ingredient.lower().strip() == name_lower:
+                    return {'name': ingredient}
         
         return None
     
