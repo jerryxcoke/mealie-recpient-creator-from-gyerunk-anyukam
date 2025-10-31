@@ -52,7 +52,32 @@ class MealieAPI:
         """Get all ingredients"""
         try:
             response = self._request('GET', '/foods')
-            return response.json()
+            data = response.json()
+
+            if isinstance(data, list):
+                return [
+                    item if isinstance(item, dict) else {'name': str(item)}
+                    for item in data
+                ]
+
+            if isinstance(data, dict):
+                items = data.get('items')
+
+                if isinstance(items, list):
+                    return [
+                        item if isinstance(item, dict) else {'name': str(item)}
+                        for item in items
+                    ]
+
+                # Fallback: the payload might already be a mapping of id -> ingredient
+                return [
+                    value if isinstance(value, dict) else {'name': str(value)}
+                    for value in data.values()
+                    if not isinstance(value, (str, int, float, bool)) or value
+                ]
+
+            print(f"Unexpected ingredient payload type: {type(data)}")
+            return []
         except requests.exceptions.HTTPError as e:
             print(f"Error fetching ingredients: {e}")
             return []
@@ -76,8 +101,15 @@ class MealieAPI:
         name_lower = name.lower().strip()
         
         for ingredient in ingredients:
-            if ingredient.get('name', '').lower().strip() == name_lower:
-                return ingredient
+            if isinstance(ingredient, dict):
+                ingredient_name = ingredient.get('name') or ingredient.get('title') or ''
+
+                if ingredient_name.lower().strip() == name_lower:
+                    return ingredient
+
+            elif isinstance(ingredient, str):
+                if ingredient.lower().strip() == name_lower:
+                    return {'name': ingredient}
         
         return None
     
@@ -116,7 +148,23 @@ class MealieAPI:
         """Create a new recipe"""
         try:
             response = self._request('POST', '/recipes', json=recipe_data)
-            return response.json()
+            data = response.json()
+
+            if isinstance(data, dict):
+                return data
+
+            if isinstance(data, str):
+                # Some endpoints may return the identifier as plain text
+                return {'id': data}
+
+            if isinstance(data, list):
+                # Assume the first entry contains the created recipe
+                first_item = data[0] if data else None
+                if isinstance(first_item, dict):
+                    return first_item
+
+            print(f"Unexpected recipe creation response type: {type(data)}")
+            return None
         except requests.exceptions.HTTPError as e:
             print(f"Error creating recipe: {e}")
             if hasattr(e.response, 'text'):
