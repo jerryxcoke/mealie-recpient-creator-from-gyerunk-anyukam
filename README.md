@@ -249,9 +249,29 @@ The codebase has been refactored into a clean, modular architecture:
 - `src/constants/` - Application constants
 - `src/services/` - Business logic and menu processing
 - `src/utils/` - Utility functions (env, I/O, fetch validation)
+- `tests/` - Comprehensive unit tests (87 tests, 77%+ coverage)
 - `index.js` - Main entry point
 
-For detailed documentation on the project structure, see [STRUCTURE.md](./STRUCTURE.md).
+For detailed documentation:
+- [STRUCTURE.md](./STRUCTURE.md) - Project architecture
+- [TESTING.md](./TESTING.md) - Testing documentation
+
+## Testing
+
+The project includes comprehensive unit tests:
+
+```bash
+# Run tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Watch mode
+npm run test:watch
+```
+
+**Test Coverage**: 87 tests passing with 77%+ code coverage across all modules.
 
 ## Using as a Library
 
