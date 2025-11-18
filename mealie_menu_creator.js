@@ -79,7 +79,7 @@ class MealieAPI {
   async callSIngredientSearch(name) {
     try {
       const response = await this.request('GET', `/foods?search=${name}`);
-       return await response.json();
+      return await response.json();
     } catch (error) {
       console.error(`Error fetching ingredients: ${error.message}`);
       return [];
@@ -149,7 +149,7 @@ class MealieAPI {
   }
 
   async getIngredientByName(name) {
-   return await this.callSIngredientSearch(name);
+    return await this.callSIngredientSearch(name);
   }
 
   async ensureIngredientExists(name) {
@@ -197,9 +197,21 @@ class MealieAPI {
     );
   }
 
-  async createRecipe(recipeData) {
+    async createRecipe(recipeData, options = {}) {
+      const includeTags = Boolean(options.includeTags);
+      const payloadData =
+        typeof recipeData === 'string'
+          ? recipeData
+          : JSON.stringify(recipeData);
     try {
-      const response = await this.request('POST', '/recipes/create/html-or-json', recipeData);
+        const response = await this.request(
+          'POST',
+          '/recipes/create/html-or-json',
+          {
+            data: payloadData,
+            includeTags
+          }
+        );
       return await response.json();
     } catch (error) {
       console.error(`Error creating recipe: ${error.message}`);
@@ -209,6 +221,21 @@ class MealieAPI {
       return null;
     }
   }
+
+    async getRecipeBySlug(slug) {
+      const identifier = String(slug || '').trim();
+      if (!identifier) {
+        return null;
+      }
+
+      try {
+        const response = await this.request('GET', `/recipes/${identifier}`);
+        return await response.json();
+      } catch (error) {
+        console.error(`Error fetching recipe '${identifier}': ${error.message}`);
+        return null;
+      }
+    }
 
   async createMealplan(date, entryType, recipeId) {
     try {
