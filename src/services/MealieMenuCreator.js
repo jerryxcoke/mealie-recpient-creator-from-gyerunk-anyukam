@@ -71,7 +71,7 @@ class MealieMenuCreator {
           : quantityValue || '',
       food: {
         name: String(foodName || originalText).trim() || originalText,
-        id: String(candidate.food.id)
+        id: candidate.food?.id ? String(candidate.food.id) : undefined
       },
       disableAmount: Boolean(
         candidate.disableAmount ?? candidate.disable_amount ?? false
