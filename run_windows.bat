@@ -40,11 +40,11 @@ echo API Token: %MEALIE_API_TOKEN:~0,10%...
 echo ============================================
 echo.
 
-REM Run the Python script
+REM Run the Node.js script
 if "%1"=="" (
-    python mealie_menu_creator.py example_menu.json
+    node mealie_menu_creator.js example_menu.json
 ) else (
-    python mealie_menu_creator.py %1
+    node mealie_menu_creator.js %1
 )
 
 if errorlevel 1 (

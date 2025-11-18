@@ -48,9 +48,9 @@ Write-Host "API Token: $($env:MEALIE_API_TOKEN.Substring(0, [Math]::Min(10, $env
 Write-Host "JSON File: $JsonFile" -ForegroundColor Cyan
 Write-Host "============================================`n" -ForegroundColor Green
 
-# Run the Python script
+# Run the Node.js script
 try {
-    python mealie_menu_creator.py $JsonFile
+    node mealie_menu_creator.js $JsonFile
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "`nScript completed successfully!" -ForegroundColor Green
