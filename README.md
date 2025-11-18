@@ -42,6 +42,12 @@ A Node.js CLI tool to automatically create recipes and weekly meal plans in [Mea
    nano .env
    ```
 
+## Environment Configuration
+
+- The CLI automatically loads a `.env` file from the current working directory before it runs.
+- Any `MEALIE_*` variables that are already present in your shell take precedence over the `.env` file.
+- You only need to export variables manually if you prefer to keep credentials outside of `.env`.
+
 ## Getting Your Mealie API Token
 
 1. Log in to your Mealie instance
@@ -76,6 +82,8 @@ run_windows.bat example_menu.json
 These helper scripts automatically load settings from your `.env` file and call the Node.js CLI for you.
 
 ### Manual Usage
+
+If a `.env` file is present, running `node mealie_menu_creator.js ...` (or the installed `mealie-menu-creator` bin) will automatically read it and populate `MEALIE_BASE_URL`/`MEALIE_API_TOKEN`. You can still override those variables by exporting them before running the CLI.
 
 ### On Windows (PowerShell):
 
