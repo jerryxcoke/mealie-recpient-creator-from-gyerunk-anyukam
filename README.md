@@ -44,7 +44,7 @@ A Node.js CLI tool to automatically create recipes and weekly meal plans in [Mea
 
 ## Environment Configuration
 
-- The CLI automatically loads a `.env` file from the current working directory before it runs.
+- The CLI automatically loads a `.env` file from the current working directory using the [`dotenv`](https://github.com/motdotla/dotenv) library.
 - Any `MEALIE_*` variables that are already present in your shell take precedence over the `.env` file.
 - You only need to export variables manually if you prefer to keep credentials outside of `.env`.
 
