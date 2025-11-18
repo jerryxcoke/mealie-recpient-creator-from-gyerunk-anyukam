@@ -3,10 +3,11 @@
   "version": "2.0.0",
   "description": "Create Mealie recipes and weekly meal plans from JSON-LD menu data using Node.js",
   "bin": {
-    "mealie-menu-creator": "./mealie_menu_creator.js"
+    "mealie-menu-creator": "./index.js"
   },
+  "main": "index.js",
   "scripts": {
-    "start": "node mealie_menu_creator.js"
+    "start": "node index.js"
   },
   "engines": {
     "node": ">=18.0.0"

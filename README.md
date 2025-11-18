@@ -240,6 +240,33 @@ Week 26 processing complete!
 - It matches recipes by name (case-insensitive)
 - This is expected behavior and not an error
 
+## Project Structure
+
+The codebase has been refactored into a clean, modular architecture:
+
+- `src/api/` - API client for Mealie
+- `src/config/` - Configuration management
+- `src/constants/` - Application constants
+- `src/services/` - Business logic and menu processing
+- `src/utils/` - Utility functions (env, I/O, fetch validation)
+- `index.js` - Main entry point
+
+For detailed documentation on the project structure, see [STRUCTURE.md](./STRUCTURE.md).
+
+## Using as a Library
+
+The tool can also be used as a library in your own Node.js projects:
+
+```javascript
+const { MealieConfig, MealieAPI, MealieMenuCreator } = require('./index.js');
+
+const config = new MealieConfig('http://localhost:9000', 'your-token');
+const api = new MealieAPI(config);
+const creator = new MealieMenuCreator(api);
+
+await creator.processWeeklyMenu(menuData);
+```
+
 ## License
 
 MIT License - feel free to use and modify as needed.
