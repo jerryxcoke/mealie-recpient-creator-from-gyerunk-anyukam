@@ -3,6 +3,7 @@
 
 const path = require('path');
 const fs = require('fs/promises');
+const fsSync = require('fs');
 
 function ensureFetchAvailable() {
   if (typeof fetch !== 'function') {
@@ -10,6 +11,51 @@ function ensureFetchAvailable() {
       'The Fetch API is not available in this version of Node.js. Please use Node 18 or newer.'
     );
   }
+}
+
+function loadEnvFileFromDisk(envFile = '.env') {
+  const envPath = path.resolve(process.cwd(), envFile);
+
+  let contents;
+  try {
+    contents = fsSync.readFileSync(envPath, 'utf8');
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn(`Warning: Unable to read ${envFile}: ${error.message}`);
+    }
+    return false;
+  }
+
+  const lines = contents.split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue;
+    }
+
+    const match = /^(?:export\s+)?([^=]+)=(.*)$/.exec(trimmed);
+    if (!match) {
+      continue;
+    }
+
+    const key = match[1].trim();
+    let value = match[2].trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    value = value.replace(/\\n/g, '\n');
+
+    if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
+      process.env[key] = value;
+    }
+  }
+
+  return true;
 }
 
 class MealieConfig {
@@ -482,6 +528,11 @@ async function main() {
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);
+  }
+
+  const envLoaded = loadEnvFileFromDisk();
+  if (envLoaded) {
+    console.log('Loaded environment variables from .env');
   }
 
   let config;
