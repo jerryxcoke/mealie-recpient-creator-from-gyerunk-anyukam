@@ -420,7 +420,7 @@ class MealieMenuCreator {
     const instructionsSource = Array.isArray(recipe?.recipeInstructions)
       ? recipe.recipeInstructions
       : [];
-    const instructions = instructionsSource.map((instruction) => {
+    const instructions = instructionsSource.map((instruction, index) => {
       let text = '';
       if (instruction && typeof instruction === 'object') {
         text = instruction.text || '';
@@ -441,16 +441,27 @@ class MealieMenuCreator {
       name: recipe?.name || 'Untitled Recipe',
       description: recipe?.description || '',
       recipeYield: recipe?.recipeYield || '1',
-      ingredients: ingredients,
-      instructions: instructions
+      recipeIngredient: ingredients,
+      recipeInstructions: instructions,
+      notes: [],
+      tags: [],
+      settings: {
+        public: true,
+        showNutrition: true,
+        showAssets: true,
+        landscapeView: false,
+        disableComments: false,
+        disableAmount: false
+      }
     };
 
-    // Add optional time fields if available
-    if (recipe?.prepTime) {
-      mealieRecipe.prepTime = recipe.prepTime;
-    }
-    if (recipe?.cookTime) {
-      mealieRecipe.cookTime = recipe.cookTime;
+    if (nutritionData && typeof nutritionData === 'object') {
+      mealieRecipe.nutrition = {
+        calories: nutritionData.calories || '',
+        protein: nutritionData.proteinContent || '',
+        fatContent: nutritionData.fatContent || '',
+        carbohydrateContent: nutritionData.carbohydrateContent || ''
+      };
     }
 
     return mealieRecipe;
