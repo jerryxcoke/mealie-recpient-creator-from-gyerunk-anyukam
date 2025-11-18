@@ -76,11 +76,10 @@ class MealieAPI {
     return response;
   }
 
-  async getIngredients() {
+  async callSIngredientSearch(name) {
     try {
-      const response = await this.request('GET', '/foods');
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      const response = await this.request('GET', `/foods?search=${name}`);
+       return await response.json();
     } catch (error) {
       console.error(`Error fetching ingredients: ${error.message}`);
       return [];
@@ -150,16 +149,7 @@ class MealieAPI {
   }
 
   async getIngredientByName(name) {
-    const ingredients = await this.getIngredients();
-    const nameLower = name.toLowerCase().trim();
-
-    return (
-      ingredients.find(
-        (ingredient) =>
-          typeof ingredient?.name === 'string' &&
-          ingredient.name.toLowerCase().trim() === nameLower
-      ) || null
-    );
+   return await this.callSIngredientSearch(name);
   }
 
   async ensureIngredientExists(name) {
@@ -209,7 +199,7 @@ class MealieAPI {
 
   async createRecipe(recipeData) {
     try {
-      const response = await this.request('POST', '/recipes', recipeData);
+      const response = await this.request('POST', '/recipes/create/html-or-json', recipeData);
       return await response.json();
     } catch (error) {
       console.error(`Error creating recipe: ${error.message}`);
@@ -392,6 +382,7 @@ class MealieMenuCreator {
 
     for (const ingredientText of ingredientTexts) {
       const parsed = await this.parseIngredientText(String(ingredientText));
+
       const ingredientEntry = {
         title: parsed?.title ?? '',
         note: parsed?.note ?? '',
@@ -404,10 +395,12 @@ class MealieMenuCreator {
             String(ingredientText).trim() ||
             'Ingredient'
         },
-        disableAmount: Boolean(parsed?.disableAmount ?? false),
+        disableAmount: false,
         display:
           parsed?.display || String(ingredientText).trim() || 'Ingredient'
       };
+
+      console.log(555, ingredientEntry);
 
       await this.api.ensureIngredientExists(ingredientEntry.food.name);
       ingredients.push(ingredientEntry);
@@ -477,6 +470,8 @@ class MealieMenuCreator {
 
     console.log(`+ Creating recipe '${recipeName}'`);
     const mealieRecipe = await this.convertRecipeToMealieFormat(recipe);
+
+    console.log(mealieRecipe);
     const createdRecipe = await this.api.createRecipe(mealieRecipe);
 
     if (createdRecipe) {
