@@ -4,6 +4,7 @@
 const path = require('path');
 const fs = require('fs/promises');
 const dotenv = require('dotenv');
+const { randomUUID } = require('crypto');
 
 function ensureFetchAvailable() {
   if (typeof fetch !== 'function') {
@@ -210,6 +211,19 @@ class MealieAPI {
     }
   }
 
+    async updateRecipe(slug, recipeData) {
+    try {
+      const response = await this.request('PATCH', `/recipes/${slug}`, recipeData);
+      return await response.json();
+    } catch (error) {
+      console.error(`Error creating recipe: ${error.message}`);
+      if (error.responseText) {
+        console.error(`Response: ${error.responseText}`);
+      }
+      return null;
+    }
+  }
+
   async createMealplan(date, entryType, recipeId) {
     try {
       const data = {
@@ -249,6 +263,9 @@ class MealieMenuCreator {
       this.normalizeParsedIngredient(parserResponse, originalText) ||
       this.buildFallbackIngredient(originalText);
 
+
+      console.log(44,parsed.food);
+
     return parsed;
   }
 
@@ -281,7 +298,8 @@ class MealieMenuCreator {
           ? String(quantityValue)
           : quantityValue || '',
       food: {
-        name: String(foodName || originalText).trim() || originalText
+        name: String(foodName || originalText).trim() || originalText,
+        id: String(candidate.food.id)
       },
       disableAmount: Boolean(
         candidate.disableAmount ?? candidate.disable_amount ?? false
@@ -383,23 +401,19 @@ class MealieMenuCreator {
     for (const ingredientText of ingredientTexts) {
       const parsed = await this.parseIngredientText(String(ingredientText));
 
-      const foodName =
-        parsed?.food?.name ||
-        parsed?.display ||
-        String(ingredientText).trim() ||
-        'Ingredient';
-
-      await this.api.ensureIngredientExists(foodName);
-
-      // Convert to the new simpler format
       const ingredientEntry = {
-        food: foodName,
-        unit: parsed?.unit || null,
-        quantity: parsed?.quantity ? parseFloat(parsed.quantity) : null,
-        note: parsed?.note || ''
+        reference_id: randomUUID(),
+        title: parsed?.title ?? '',
+        note: parsed?.note ?? '',
+        unit: parsed?.unit ?? '',
+        quantity: parsed?.quantity ?? '',
+        food: parsed?.food ?? '',
+        disableAmount: false,
+        display:
+          parsed?.display || String(ingredientText).trim() || 'Ingredient'
       };
 
-      console.log('  Ingredient:', ingredientEntry);
+      await this.api.ensureIngredientExists(ingredientEntry.food.name);
       ingredients.push(ingredientEntry);
     }
 
@@ -414,8 +428,14 @@ class MealieMenuCreator {
         text = String(instruction);
       }
 
-      return { text };
+      return {
+        ingredientReferences : [],
+        text
+      };
     });
+
+    const nutritionData =
+      recipe && typeof recipe === 'object' ? recipe.nutrition || {} : {};
 
     const mealieRecipe = {
       name: recipe?.name || 'Untitled Recipe',
@@ -451,7 +471,8 @@ class MealieMenuCreator {
     const mealieRecipe = await this.convertRecipeToMealieFormat(recipe);
 
     console.log(mealieRecipe);
-    const createdRecipe = await this.api.createRecipe(mealieRecipe);
+    const slug = await this.api.createRecipe({name: mealieRecipe.name});
+    const createdRecipe = await this.api.updateRecipe(slug, mealieRecipe);
 
     if (createdRecipe) {
       console.log(
