@@ -11,6 +11,7 @@ A Node.js CLI tool to automatically create recipes and weekly meal plans in [Mea
 - ✅ Supports Hungarian meal type keywords (reggeli → breakfast, etc.)
 - ✅ Extracts and parses ingredient quantities and names
 - ✅ Includes nutrition information
+- ✅ Uses Mealie's ingredient parser API instead of local parsing logic
 
 ## Prerequisites
 
@@ -186,7 +187,8 @@ Keywords can be in the `keywords` field or in the `description`.
 1. **Parse JSON**: Reads the weekly menu structure
 2. **Calculate Dates**: Determines calendar dates for the specified week
 3. **Process Ingredients**: 
-   - Extracts ingredient names from recipe data
+   - Sends every `recipeIngredient` entry to `/api/parser/ingredient`
+   - Uses the parser response to determine ingredient names/amounts
    - Checks if each ingredient exists in Mealie
    - Creates missing ingredients automatically
 4. **Process Recipes**:
