@@ -1,6 +1,6 @@
 # Mealie Recipe and Weekly Menu Creator
 
-A Python tool to automatically create recipes and weekly meal plans in [Mealie](https://mealie.io/) from JSON-LD structured recipe data.
+A Node.js CLI tool to automatically create recipes and weekly meal plans in [Mealie](https://mealie.io/) from JSON-LD structured recipe data.
 
 ## Features
 
@@ -14,7 +14,7 @@ A Python tool to automatically create recipes and weekly meal plans in [Mealie](
 
 ## Prerequisites
 
-- Python 3.7+
+- Node.js 18+
 - Access to a Mealie instance
 - Mealie API token
 
@@ -22,35 +22,25 @@ A Python tool to automatically create recipes and weekly meal plans in [Mealie](
 
 ### Windows
 
-1. Clone or download this repository
-
-2. Install dependencies:
-```cmd
-pip install -r requirements.txt
-```
-
+1. Install Node.js 18 or newer
+2. Clone or download this repository
 3. Configure your Mealie connection:
-```cmd
-copy .env.example .env
-REM Edit .env with Notepad and add your Mealie URL and API token
-notepad .env
-```
+   ```cmd
+   copy .env.example .env
+   REM Edit .env with Notepad and add your Mealie URL and API token
+   notepad .env
+   ```
 
 ### Linux/Mac
 
-1. Clone or download this repository
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
+1. Install Node.js 18 or newer
+2. Clone or download this repository
 3. Configure your Mealie connection:
-```bash
-cp .env.example .env
-# Edit .env and add your Mealie URL and API token
-nano .env
-```
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your Mealie URL and API token
+   nano .env
+   ```
 
 ## Getting Your Mealie API Token
 
@@ -83,7 +73,7 @@ REM Edit .env with your Mealie URL and API token
 run_windows.bat example_menu.json
 ```
 
-These helper scripts automatically load settings from your `.env` file!
+These helper scripts automatically load settings from your `.env` file and call the Node.js CLI for you.
 
 ### Manual Usage
 
@@ -95,7 +85,7 @@ $env:MEALIE_BASE_URL="http://your-mealie-instance:9000"
 $env:MEALIE_API_TOKEN="your_api_token_here"
 
 # Run the script
-python mealie_menu_creator.py example_menu.json
+node mealie_menu_creator.js example_menu.json
 ```
 
 ### On Windows (Command Prompt/CMD):
@@ -106,7 +96,7 @@ set MEALIE_BASE_URL=http://your-mealie-instance:9000
 set MEALIE_API_TOKEN=your_api_token_here
 
 # Run the script
-python mealie_menu_creator.py example_menu.json
+node mealie_menu_creator.js example_menu.json
 ```
 
 ### On Linux/Mac:
@@ -115,19 +105,19 @@ python mealie_menu_creator.py example_menu.json
 export MEALIE_BASE_URL=http://your-mealie-instance:9000
 export MEALIE_API_TOKEN=your_api_token_here
 
-python mealie_menu_creator.py example_menu.json
+node mealie_menu_creator.js example_menu.json
 ```
 
 ### Using a JSON file from stdin:
 
 **Windows PowerShell:**
 ```powershell
-Get-Content your_menu.json | python mealie_menu_creator.py
+Get-Content your_menu.json | node mealie_menu_creator.js
 ```
 
 **Linux/Mac:**
 ```bash
-cat your_menu.json | python mealie_menu_creator.py
+cat your_menu.json | node mealie_menu_creator.js
 ```
 
 ## JSON Format
