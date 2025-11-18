@@ -199,7 +199,7 @@ class MealieAPI {
 
   async createRecipe(recipeData) {
     try {
-      const response = await this.request('POST', '/recipes/create/html-or-json', recipeData);
+      const response = await this.request('POST', '/recipes', recipeData);
       return await response.json();
     } catch (error) {
       console.error(`Error creating recipe: ${error.message}`);
@@ -383,33 +383,30 @@ class MealieMenuCreator {
     for (const ingredientText of ingredientTexts) {
       const parsed = await this.parseIngredientText(String(ingredientText));
 
+      const foodName =
+        parsed?.food?.name ||
+        parsed?.display ||
+        String(ingredientText).trim() ||
+        'Ingredient';
+
+      await this.api.ensureIngredientExists(foodName);
+
+      // Convert to the new simpler format
       const ingredientEntry = {
-        title: parsed?.title ?? '',
-        note: parsed?.note ?? '',
-        unit: parsed?.unit ?? '',
-        quantity: parsed?.quantity ?? '',
-        food: {
-          name:
-            parsed?.food?.name ||
-            parsed?.display ||
-            String(ingredientText).trim() ||
-            'Ingredient'
-        },
-        disableAmount: false,
-        display:
-          parsed?.display || String(ingredientText).trim() || 'Ingredient'
+        food: foodName,
+        unit: parsed?.unit || null,
+        quantity: parsed?.quantity ? parseFloat(parsed.quantity) : null,
+        note: parsed?.note || ''
       };
 
-      console.log(555, ingredientEntry);
-
-      await this.api.ensureIngredientExists(ingredientEntry.food.name);
+      console.log('  Ingredient:', ingredientEntry);
       ingredients.push(ingredientEntry);
     }
 
     const instructionsSource = Array.isArray(recipe?.recipeInstructions)
       ? recipe.recipeInstructions
       : [];
-    const instructions = instructionsSource.map((instruction, index) => {
+    const instructions = instructionsSource.map((instruction) => {
       let text = '';
       if (instruction && typeof instruction === 'object') {
         text = instruction.text || '';
@@ -417,41 +414,23 @@ class MealieMenuCreator {
         text = String(instruction);
       }
 
-      return {
-        id: String(index),
-        title: '',
-        text
-      };
+      return { text };
     });
-
-    const nutritionData =
-      recipe && typeof recipe === 'object' ? recipe.nutrition || {} : {};
 
     const mealieRecipe = {
       name: recipe?.name || 'Untitled Recipe',
       description: recipe?.description || '',
       recipeYield: recipe?.recipeYield || '1',
-      recipeIngredient: ingredients,
-      recipeInstructions: instructions,
-      notes: [],
-      tags: [],
-      settings: {
-        public: true,
-        showNutrition: true,
-        showAssets: true,
-        landscapeView: false,
-        disableComments: false,
-        disableAmount: false
-      }
+      ingredients: ingredients,
+      instructions: instructions
     };
 
-    if (nutritionData && typeof nutritionData === 'object') {
-      mealieRecipe.nutrition = {
-        calories: nutritionData.calories || '',
-        protein: nutritionData.proteinContent || '',
-        fatContent: nutritionData.fatContent || '',
-        carbohydrateContent: nutritionData.carbohydrateContent || ''
-      };
+    // Add optional time fields if available
+    if (recipe?.prepTime) {
+      mealieRecipe.prepTime = recipe.prepTime;
+    }
+    if (recipe?.cookTime) {
+      mealieRecipe.cookTime = recipe.cookTime;
     }
 
     return mealieRecipe;
