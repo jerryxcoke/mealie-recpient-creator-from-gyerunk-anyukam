@@ -344,6 +344,201 @@ class MealieMenuCreator {
     };
   }
 
+  normalizeSchemaOrgIngredientList(rawIngredientList) {
+    const result = {
+      ingredients: [],
+      coercedEntries: 0
+    };
+
+    if (!Array.isArray(rawIngredientList)) {
+      return result;
+    }
+
+    for (const entry of rawIngredientList) {
+      if (typeof entry === 'string') {
+        const trimmed = entry.trim();
+        if (trimmed) {
+          result.ingredients.push(trimmed);
+        }
+        continue;
+      }
+
+      const fallback = this.stringifySchemaOrgIngredientEntry(entry);
+      if (fallback) {
+        result.ingredients.push(fallback);
+        result.coercedEntries += 1;
+      }
+    }
+
+    return result;
+  }
+
+  stringifySchemaOrgIngredientEntry(entry) {
+    if (!entry || typeof entry !== 'object') {
+      return '';
+    }
+
+    const parts = [];
+    const quantity =
+      entry.quantity ??
+      entry.amount ??
+      entry.value ??
+      entry.quantityText ??
+      entry.amountText;
+    const unit =
+      entry.unit ??
+      entry.units ??
+      entry.measure ??
+      entry.unitText ??
+      entry.measurement;
+
+    const name =
+      entry.name ??
+      entry.food?.name ??
+      entry.ingredient ??
+      entry.text ??
+      entry.label ??
+      entry.display;
+
+    if (quantity) {
+      parts.push(String(quantity).trim());
+    }
+
+    if (unit) {
+      parts.push(String(unit).trim());
+    }
+
+    if (name) {
+      parts.push(String(name).trim());
+    }
+
+    if (entry.note) {
+      parts.push(`(${String(entry.note).trim()})`);
+    }
+
+    return parts.join(' ').replace(/\s+/g, ' ').trim();
+  }
+
+  buildSchemaOrgInstructions(rawInstructions) {
+    const instructions = Array.isArray(rawInstructions) ? rawInstructions : [];
+
+    return instructions
+      .map((instruction) => {
+        if (typeof instruction === 'string') {
+          const text = instruction.trim();
+          if (!text) {
+            return null;
+          }
+          return {
+            '@type': 'HowToStep',
+            text
+          };
+        }
+
+        if (instruction && typeof instruction === 'object') {
+          const text = String(instruction.text || instruction.description || '').trim();
+          const step = {
+            '@type': instruction['@type'] || 'HowToStep'
+          };
+
+          if (instruction.name) {
+            step.name = instruction.name;
+          }
+
+          if (text) {
+            step.text = text;
+          }
+
+          if (instruction.url) {
+            step.url = instruction.url;
+          }
+
+          if (instruction.image) {
+            step.image = instruction.image;
+          }
+
+          if (!step.text && !step.name) {
+            return null;
+          }
+
+          return step;
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  buildSchemaOrgNutrition(rawNutrition) {
+    if (!rawNutrition || typeof rawNutrition !== 'object') {
+      return null;
+    }
+
+    const nutrition = {
+      '@type': 'NutritionInformation'
+    };
+
+    const fields = [
+      'calories',
+      'carbohydrateContent',
+      'cholesterolContent',
+      'fiberContent',
+      'proteinContent',
+      'fatContent',
+      'saturatedFatContent',
+      'sodiumContent',
+      'sugarContent',
+      'transFatContent',
+      'unsaturatedFatContent',
+      'servingSize'
+    ];
+
+    let hasValue = false;
+
+    for (const field of fields) {
+      const value = rawNutrition[field];
+      if (typeof value !== 'undefined' && value !== null && value !== '') {
+        nutrition[field] = value;
+        hasValue = true;
+      }
+    }
+
+    return hasValue ? nutrition : null;
+  }
+
+  buildSchemaOrgRecipe(recipe, ingredientTexts) {
+    const baseRecipe =
+      recipe && typeof recipe === 'object'
+        ? { ...recipe }
+        : {};
+
+    baseRecipe['@context'] =
+      baseRecipe['@context'] || 'https://schema.org';
+    baseRecipe['@type'] = 'Recipe';
+    baseRecipe.name = baseRecipe.name || 'Untitled Recipe';
+    baseRecipe.description = baseRecipe.description || '';
+    baseRecipe.recipeYield = baseRecipe.recipeYield || '';
+    baseRecipe.recipeIngredient = ingredientTexts;
+
+    const schemaInstructions = this.buildSchemaOrgInstructions(
+      recipe?.recipeInstructions
+    );
+    if (schemaInstructions.length) {
+      baseRecipe.recipeInstructions = schemaInstructions;
+    } else {
+      delete baseRecipe.recipeInstructions;
+    }
+
+    const schemaNutrition = this.buildSchemaOrgNutrition(recipe?.nutrition);
+    if (schemaNutrition) {
+      baseRecipe.nutrition = schemaNutrition;
+    } else {
+      delete baseRecipe.nutrition;
+    }
+
+    return baseRecipe;
+  }
+
   extractMealType(recipe) {
     const keywords = recipe?.keywords;
     if (typeof keywords === 'string') {
@@ -373,9 +568,16 @@ class MealieMenuCreator {
   }
 
   async convertRecipeToMealieFormat(recipe) {
-    const ingredientTexts = Array.isArray(recipe?.recipeIngredient)
-      ? recipe.recipeIngredient
-      : [];
+    const { ingredients: ingredientTexts, coercedEntries } =
+      this.normalizeSchemaOrgIngredientList(recipe?.recipeIngredient);
+
+    if (coercedEntries > 0) {
+      console.warn(
+        `  ⚠ Coerced ${coercedEntries} recipeIngredient entr${
+          coercedEntries === 1 ? 'y' : 'ies'
+        } to schema.org text format`
+      );
+    }
 
     console.log(`  Processing ${ingredientTexts.length} ingredients...`);
     const ingredients = [];
@@ -453,6 +655,8 @@ class MealieMenuCreator {
         carbohydrateContent: nutritionData.carbohydrateContent || ''
       };
     }
+
+    mealieRecipe.schemaOrg = this.buildSchemaOrgRecipe(recipe, ingredientTexts);
 
     return mealieRecipe;
   }

@@ -12,6 +12,7 @@ A Node.js CLI tool to automatically create recipes and weekly meal plans in [Mea
 - ✅ Extracts and parses ingredient quantities and names
 - ✅ Includes nutrition information
 - ✅ Uses Mealie's ingredient parser API instead of local parsing logic
+- ✅ Validates schema.org Recipe fields and forwards the normalized schema to Mealie
 
 ## Prerequisites
 
@@ -181,6 +182,12 @@ The tool recognizes the following meal types:
 - `snack` → snack
 
 Keywords can be in the `keywords` field or in the `description`.
+
+## Schema.org Recipe Compliance
+
+- Every recipe **must** provide `recipeIngredient` as an array of strings, matching the [schema.org Recipe specification](https://schema.org/Recipe).
+- Non-string entries are automatically coerced to strings, and a warning is printed so you can fix the source data.
+- The CLI attaches the normalized schema.org recipe JSON (including the sanitized ingredients) to the Mealie API call, so the original structured data is preserved inside Mealie.
 
 ## How It Works
 
