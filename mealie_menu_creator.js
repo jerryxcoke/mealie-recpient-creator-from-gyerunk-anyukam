@@ -104,6 +104,51 @@ class MealieAPI {
     }
   }
 
+  async parseIngredient(ingredientText) {
+    const text = String(ingredientText ?? '').trim();
+    if (!text) {
+      return null;
+    }
+
+    const payloadVariants = [{ ingredient: text }, { input: text }, { text }];
+
+    let lastError = null;
+
+    for (let index = 0; index < payloadVariants.length; index += 1) {
+      const payload = payloadVariants[index];
+      try {
+        const response = await this.request(
+          'POST',
+          '/parser/ingredient',
+          payload
+        );
+        return await response.json();
+      } catch (error) {
+        lastError = error;
+        const shouldRetry =
+          error?.status &&
+          error.status >= 400 &&
+          error.status < 500 &&
+          error.status !== 401 &&
+          error.status !== 403 &&
+          index < payloadVariants.length - 1;
+
+        if (!shouldRetry) {
+          break;
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error(`Error parsing ingredient '${text}': ${lastError.message}`);
+      if (lastError.responseText) {
+        console.error(`Response: ${lastError.responseText}`);
+      }
+    }
+
+    return null;
+  }
+
   async getIngredientByName(name) {
     const ingredients = await this.getIngredients();
     const nameLower = name.toLowerCase().trim();
@@ -203,18 +248,109 @@ class MealieMenuCreator {
     this.api = api;
   }
 
-  parseIngredientText(ingredientText) {
-    const match = /^([\d\-\.]+\s*[a-zA-Z]*)\s+(.+)$/.exec(
-      ingredientText.trim()
-    );
+  async parseIngredientText(ingredientText) {
+    const originalText = String(ingredientText ?? '').trim();
+    if (!originalText) {
+      return this.buildFallbackIngredient('');
+    }
 
-    const quantity = match ? match[1].trim() : '';
-    const name = match ? match[2].trim() : ingredientText.trim();
+    const parserResponse = await this.api.parseIngredient(originalText);
+    const parsed =
+      this.normalizeParsedIngredient(parserResponse, originalText) ||
+      this.buildFallbackIngredient(originalText);
+
+    return parsed;
+  }
+
+  normalizeParsedIngredient(parserResponse, originalText) {
+    const candidate = this.extractParserCandidate(parserResponse);
+    if (!candidate || typeof candidate !== 'object') {
+      return null;
+    }
+
+    const quantityValue =
+      candidate.quantity ?? candidate.amount ?? candidate.value ?? '';
+    const unitValue =
+      candidate.unit ?? candidate.units ?? candidate.measure ?? '';
+    const noteValue = candidate.note ?? candidate.notes ?? '';
+    const displayValue =
+      candidate.display ?? candidate.originalText ?? originalText;
+    const foodName =
+      candidate.food?.name ??
+      candidate.name ??
+      candidate.ingredient ??
+      displayValue ??
+      originalText;
 
     return {
-      quantity,
-      name,
-      originalText: ingredientText
+      title: candidate.title ?? '',
+      note: noteValue || displayValue || originalText,
+      unit: typeof unitValue === 'number' ? String(unitValue) : unitValue || '',
+      quantity:
+        typeof quantityValue === 'number'
+          ? String(quantityValue)
+          : quantityValue || '',
+      food: {
+        name: String(foodName || originalText).trim() || originalText
+      },
+      disableAmount: Boolean(
+        candidate.disableAmount ?? candidate.disable_amount ?? false
+      ),
+      display: displayValue || originalText
+    };
+  }
+
+  extractParserCandidate(parserResponse) {
+    if (!parserResponse) {
+      return null;
+    }
+
+    if (Array.isArray(parserResponse)) {
+      return parserResponse[0] || null;
+    }
+
+    if (typeof parserResponse !== 'object') {
+      return null;
+    }
+
+    const candidateKeys = [
+      'ingredient',
+      'result',
+      'data',
+      'parsed',
+      'items',
+      'ingredients'
+    ];
+
+    for (const key of candidateKeys) {
+      const value = parserResponse[key];
+
+      if (Array.isArray(value) && value.length) {
+        return value[0];
+      }
+
+      if (value && typeof value === 'object') {
+        return value;
+      }
+    }
+
+    return parserResponse;
+  }
+
+  buildFallbackIngredient(originalText) {
+    const text = String(originalText || '').trim();
+    const fallbackName = text || 'Ingredient';
+
+    return {
+      title: '',
+      note: text,
+      unit: '',
+      quantity: '',
+      food: {
+        name: fallbackName
+      },
+      disableAmount: true,
+      display: text
     };
   }
 
@@ -255,20 +391,26 @@ class MealieMenuCreator {
     const ingredients = [];
 
     for (const ingredientText of ingredientTexts) {
-      const parsed = this.parseIngredientText(String(ingredientText));
-      await this.api.ensureIngredientExists(parsed.name);
-
-      ingredients.push({
-        title: '',
-        note: parsed.originalText,
-        unit: '',
-        quantity: parsed.quantity,
+      const parsed = await this.parseIngredientText(String(ingredientText));
+      const ingredientEntry = {
+        title: parsed?.title ?? '',
+        note: parsed?.note ?? '',
+        unit: parsed?.unit ?? '',
+        quantity: parsed?.quantity ?? '',
         food: {
-          name: parsed.name
+          name:
+            parsed?.food?.name ||
+            parsed?.display ||
+            String(ingredientText).trim() ||
+            'Ingredient'
         },
-        disableAmount: false,
-        display: parsed.originalText
-      });
+        disableAmount: Boolean(parsed?.disableAmount ?? false),
+        display:
+          parsed?.display || String(ingredientText).trim() || 'Ingredient'
+      };
+
+      await this.api.ensureIngredientExists(ingredientEntry.food.name);
+      ingredients.push(ingredientEntry);
     }
 
     const instructionsSource = Array.isArray(recipe?.recipeInstructions)
