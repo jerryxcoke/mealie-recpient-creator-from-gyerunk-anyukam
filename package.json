@@ -17,5 +17,8 @@
     "recipes",
     "meal-planner",
     "cli"
-  ]
+  ],
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
 }
