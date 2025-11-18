@@ -87,6 +87,17 @@ class MealieAPI {
     }
   }
 
+    async getTagByName(name) {
+    try {
+      const response = await this.request('GET', `/organizers/tags?search=${name}`);
+       const tags =  await response.json();
+       return tags.items[0];
+    } catch (error) {
+      console.error(`Error fetching tags: ${error.message}`);
+      return [];
+    }
+  }
+
   async createIngredient(name) {
     try {
       const data = {
@@ -437,6 +448,12 @@ class MealieMenuCreator {
     const nutritionData =
       recipe && typeof recipe === 'object' ? recipe.nutrition || {} : {};
 
+    const tags = [];
+     const tag = await this.api.getTagByName(recipe.keywords)?? null; 
+     if (tag) {
+      tags.push(tag);
+     }
+
     const mealieRecipe = {
       name: recipe?.name || 'Untitled Recipe',
       description: recipe?.description || '',
@@ -444,7 +461,7 @@ class MealieMenuCreator {
       recipeIngredient: ingredients,
       recipeInstructions: instructions,
       notes: [],
-      tags: [],
+      tags: tags,
       settings: {
         public: true,
         showNutrition: true,
