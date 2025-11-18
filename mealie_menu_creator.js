@@ -199,7 +199,7 @@ class MealieAPI {
 
   async createRecipe(recipeData) {
     try {
-      const response = await this.request('POST', '/recipes/create/html-or-json', recipeData);
+      const response = await this.request('POST', '/recipes', recipeData);
       return await response.json();
     } catch (error) {
       console.error(`Error creating recipe: ${error.message}`);
@@ -384,20 +384,13 @@ class MealieMenuCreator {
       const parsed = await this.parseIngredientText(String(ingredientText));
 
       const ingredientEntry = {
-        title: parsed?.title ?? '',
         note: parsed?.note ?? '',
         unit: parsed?.unit ?? '',
         quantity: parsed?.quantity ?? '',
-        food: {
-          name:
-            parsed?.food?.name ||
+        food: parsed?.food?.name ||
             parsed?.display ||
             String(ingredientText).trim() ||
-            'Ingredient'
-        },
-        disableAmount: false,
-        display:
-          parsed?.display || String(ingredientText).trim() || 'Ingredient'
+            'Ingredient',
       };
 
       console.log(555, ingredientEntry);
