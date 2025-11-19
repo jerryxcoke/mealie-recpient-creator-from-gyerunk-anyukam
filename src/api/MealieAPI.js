@@ -1,5 +1,7 @@
 'use strict';
 
+const util = require('util');
+
 /**
  * Mealie API client for making HTTP requests
  */
@@ -109,7 +111,7 @@ class MealieAPI {
       return null;
     }
 
-    const payloadVariants = [{ ingredient: text }, { input: text }, { text }];
+    const payloadVariants = [{ ingredient: text, "parser": "brute", }, { input: text }, { text }];
 
     let lastError = null;
 
@@ -163,14 +165,6 @@ class MealieAPI {
    * @returns {Promise<object>} The ingredient
    */
   async ensureIngredientExists(name) {
-    const ingredient = await this.getIngredientByName(name);
-
-    if (ingredient && ingredient.items.length > 0) {
-      console.log(`  ✓ Ingredient '${name}' already exists`);
-      return ingredient;
-    }
-
-    console.log(`  + Creating ingredient '${name}'`);
     return this.createIngredient(name);
   }
 
@@ -246,6 +240,7 @@ class MealieAPI {
       return await response.json();
     } catch (error) {
       console.error(`Error updating recipe: ${error.message}`);
+      console.log(util.inspect(recipeData, false, null, true /* enable colors */))
       if (error.responseText) {
         console.error(`Response: ${error.responseText}`);
       }

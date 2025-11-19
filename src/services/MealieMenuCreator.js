@@ -26,11 +26,11 @@ class MealieMenuCreator {
     }
 
     const parserResponse = await this.api.parseIngredient(originalText);
+
     const parsed =
       this.normalizeParsedIngredient(parserResponse, originalText) ||
       this.buildFallbackIngredient(originalText);
 
-    console.log(44, parsed.food);
 
     return parsed;
   }
@@ -60,6 +60,7 @@ class MealieMenuCreator {
       candidate.ingredient ??
       displayValue ??
       originalText;
+
 
     return {
       title: candidate.title ?? '',
@@ -185,23 +186,35 @@ class MealieMenuCreator {
 
     console.log(`  Processing ${ingredientTexts.length} ingredients...`);
     const ingredients = [];
+    let amountableFields = {
+      disableAmount: false,
+    };
 
     for (const ingredientText of ingredientTexts) {
       const parsed = await this.parseIngredientText(String(ingredientText));
 
+      if (parsed.unit.id === null) {
+        amountableFields.disableAmount =true;
+      } else {
+        amountableFields.unit = parsed?.unit;
+      }
+
       const ingredientEntry = {
+        ...amountableFields,
         reference_id: randomUUID(),
         title: parsed?.title ?? '',
         note: parsed?.note ?? '',
-        unit: parsed?.unit ?? '',
         quantity: parsed?.quantity ?? '',
         food: parsed?.food ?? '',
-        disableAmount: false,
         display:
           parsed?.display || String(ingredientText).trim() || 'Ingredient'
       };
 
-      await this.api.ensureIngredientExists(ingredientEntry.food.name);
+      if (!ingredientEntry.food.id) {
+        const newIngredient = await this.api.createIngredient(ingredientEntry.food.name);
+       ingredientEntry.food.id = newIngredient.id;
+      }
+
       ingredients.push(ingredientEntry);
     }
 
@@ -280,7 +293,6 @@ class MealieMenuCreator {
     console.log(`+ Creating recipe '${recipeName}'`);
     const mealieRecipe = await this.convertRecipeToMealieFormat(recipe);
 
-    console.log(mealieRecipe);
     const slug = await this.api.createRecipe({ name: mealieRecipe.name });
     const createdRecipe = await this.api.updateRecipe(slug, mealieRecipe);
 
