@@ -165,7 +165,7 @@ class MealieAPI {
   async ensureIngredientExists(name) {
     const ingredient = await this.getIngredientByName(name);
 
-    if (ingredient && ingredient.length > 0) {
+    if (ingredient && ingredient.items.length > 0) {
       console.log(`  ✓ Ingredient '${name}' already exists`);
       return ingredient;
     }

@@ -93,7 +93,7 @@ describe('MealieAPI', () => {
 
   describe('searchIngredients', () => {
     test('should search for ingredients', async () => {
-      const mockIngredients = [{ id: 1, name: 'flour' }];
+      const mockIngredients ={items:[{ id: 1, name: 'flour' }]};
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => mockIngredients
@@ -391,15 +391,15 @@ describe('MealieAPI', () => {
   describe('ensureIngredientExists', () => {
     test('should return existing ingredient without creating', async () => {
       const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-      const mockIngredient = { id: 1, name: 'flour' };
+      const mockIngredient = {items:[{ id: 1, name: 'flour' }]};
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => [mockIngredient]
+        json: async () => mockIngredient
       });
 
       const result = await api.ensureIngredientExists('flour');
 
-      expect(result).toEqual([mockIngredient]);
+      expect(result).toEqual(mockIngredient);
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('already exists')
       );
@@ -409,12 +409,12 @@ describe('MealieAPI', () => {
 
     test('should create ingredient if not found', async () => {
       const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-      const mockNewIngredient = { id: 2, name: 'sugar' };
+      const mockNewIngredient = {items:[{ id: 1, name: 'sugar' }]};
       
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => []
+          json: async () => {items:[]}
         })
         .mockResolvedValueOnce({
           ok: true,
