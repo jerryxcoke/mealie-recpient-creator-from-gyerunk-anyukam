@@ -284,6 +284,7 @@ class MealieMenuCreator {
     const existingRecipe = await this.api.getRecipeByName(recipeName);
 
     if (existingRecipe) {
+      console.log(existingRecipe)
       console.log(
         `✓ Recipe '${recipeName}' already exists (ID: ${existingRecipe.id || existingRecipe.slug})`
       );
@@ -295,6 +296,9 @@ class MealieMenuCreator {
 
     const slug = await this.api.createRecipe({ name: mealieRecipe.name });
     const createdRecipe = await this.api.updateRecipe(slug, mealieRecipe);
+    if(recipe.image) {
+      await this.api.addimage(slug, recipe.image[0]);
+    }
 
     if (createdRecipe) {
       console.log(

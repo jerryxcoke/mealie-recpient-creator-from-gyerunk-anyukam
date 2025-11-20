@@ -172,14 +172,10 @@ class MealieAPI {
    * Get all recipes
    * @returns {Promise<Array>} Array of recipes
    */
-  async getRecipes() {
+  async searchRecipeByName(name) {
     try {
-      const response = await this.request('GET', '/recipes');
+      const response = await this.request('GET', `/recipes?search=${name}`);
       const data = await response.json();
-
-      if (Array.isArray(data)) {
-        return data;
-      }
 
       if (Array.isArray(data.items)) {
         return data.items;
@@ -198,7 +194,7 @@ class MealieAPI {
    * @returns {Promise<object|null>} Recipe or null if not found
    */
   async getRecipeByName(name) {
-    const recipes = await this.getRecipes();
+    const recipes = await this.searchRecipeByName(name);
     const nameLower = name.toLowerCase().trim();
 
     return (
@@ -241,6 +237,20 @@ class MealieAPI {
     } catch (error) {
       console.error(`Error updating recipe: ${error.message}`);
       console.log(util.inspect(recipeData, false, null, true /* enable colors */))
+      if (error.responseText) {
+        console.error(`Response: ${error.responseText}`);
+      }
+      return null;
+    }
+  }
+
+    async addimage(slug, url) {
+    try {
+      const response = await this.request('POST', `/recipes/${slug}/image`, {url});
+      return await response.json();
+    } catch (error) {
+      console.error(`Error updating recipe: ${error.message}`);
+      console.log(util.inspect({slug, url}, false, null, true /* enable colors */))
       if (error.responseText) {
         console.error(`Response: ${error.responseText}`);
       }
