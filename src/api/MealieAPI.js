@@ -111,7 +111,7 @@ class MealieAPI {
       return null;
     }
 
-    const payloadVariants = [{ ingredient: text, "parser": "brute", }, { input: text }, { text }];
+    const payloadVariants = [{ ingredient: text, "parser": "brute", },{ ingredient: text, "parser": "nlp", }, { input: text }, { text }];
 
     let lastError = null;
 
@@ -129,7 +129,7 @@ class MealieAPI {
         const shouldRetry =
           error?.status &&
           error.status >= 400 &&
-          error.status < 500 &&
+          error.status <= 500 &&
           error.status !== 401 &&
           error.status !== 403 &&
           index < payloadVariants.length - 1;
