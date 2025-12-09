@@ -231,11 +231,12 @@ class MealieAPI {
    * @returns {Promise<object|null>} Updated recipe or null on error
    */
   async updateRecipe(slug, recipeData) {
+
     try {
       const response = await this.request('PATCH', `/recipes/${slug}`, recipeData);
       return await response.json();
     } catch (error) {
-      console.error(`Error updating recipe: ${error.message}`);
+      console.error(`Error adding image to recipe: ${error.message}`);
       console.log(util.inspect(recipeData, false, null, true /* enable colors */))
       if (error.responseText) {
         console.error(`Response: ${error.responseText}`);
@@ -245,6 +246,12 @@ class MealieAPI {
   }
 
     async addimage(slug, url) {
+
+    if (!url) {
+      console.log(`no image url: ${slug}`);
+      return null;
+    }
+
     try {
       const response = await this.request('POST', `/recipes/${slug}/image`, {url});
       return await response.json();
@@ -274,7 +281,7 @@ class MealieAPI {
       };
       const response = await this.request(
         'POST',
-        '/groups/mealplans',
+        '/households/mealplans',
         data
       );
       return await response.json();

@@ -284,9 +284,8 @@ class MealieMenuCreator {
     const existingRecipe = await this.api.getRecipeByName(recipeName);
 
     if (existingRecipe) {
-      console.log(existingRecipe)
       console.log(
-        `✓ Recipe '${recipeName}' already exists (ID: ${existingRecipe.id || existingRecipe.slug})`
+        `✓ Recipe '${recipeName}' already exists (ID: ${existingRecipe.id}) https://receptek.makako.hu/g/home/r/${existingRecipe.slug}`
       );
       return existingRecipe;
     }

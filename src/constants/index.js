@@ -8,7 +8,10 @@ const MEAL_TYPE_MAP = {
   ebéd: 'lunch',
   ebed: 'lunch',
   vacsora: 'dinner',
-  snack: 'snack',
+  side: 'side',
+  tizorai: 'side',
+  tízórai: 'side',
+  uzsonna: 'side',
   breakfast: 'breakfast',
   lunch: 'lunch',
   dinner: 'dinner'
